@@ -18,7 +18,9 @@ var options = {
 var owner_name;
 
 var adventure_start_time = 0;
+var adventure_off_cd_time = 0;
 var adventure_cd = 3; // Minutes
+var auto_adventure_launch_cd = 5; // Minutes
 
 var monster_names = ["Igor", "Terrorstep", "Gutteeth", "Vexseeker", "Spectraltaur", "Barbbug", "Umbrapaw", "Stoneface", "Bob", "Josephine"];
 var monster_suffixes = [" the Terrible", " the Devious", " the Flamboyant", " the Crybaby", " the Dreadful"];
@@ -298,20 +300,32 @@ function adventure_join(channel, userstate)
 
 // Handle chat prompts
 client.on("chat", function(channel, userstate, message, self) {
+    // If someone messages the chat, we know chat is active so auto launch adventure when appropriate
+    var current_time = new Date().getTime();
+    if (adventure_off_cd_time != 0 && current_time - adventure_off_cd_time > auto_adventure_launch_cd * 60 * 1000) // X mins * 60 secs/min * 1000 millisecs/sec
+    {
+        adventure_start_time = current_time;
+        adventure_off_cd_time = current_time;
+        create_monster(channel);
+        client.say(channel, "An adventure has started! " + game.monster.name + ", a level " + game.monster.level + " monster has been summoned!");
+        game.queuing = true;
+        queue_game(channel);
+    }
+    
     if (message.substring(0, 11) == '!adventure_') // Prevents accidental spamming and getting IP blocked from Twitch
     {
         if (message == "!adventure_help")
-            client.say(channel, userstate["display-name"] + ", valid adventure commands are: !adventure_help, !adventure_start, !adventure_join, !adventure_check_items, and !adventure_set_cd_minutes (mod only)");
+            client.say(channel, userstate["display-name"] + ", valid adventure commands are: !adventure_help, !adventure_start, !adventure_join, !adventure_check_items, !adventure_set_cd_minutes (mod only), and !adventure_set_auto_launch_minutes (mod only)");
         else if (message == "!adventure_start")
         {
             if (game.active || game.queuing)
                 client.say(channel, userstate["display-name"] + ", an adventure is already in progress");
             else
             {
-                var current_time = new Date().getTime();
-                if (current_time - adventure_start_time > adventure_cd * 60 * 1000) // X mins * 60 secs/min * 1000 millisecs/sec
+                if (current_time - adventure_start_time > adventure_cd * 60 * 1000) 
                 {
                     adventure_start_time = current_time;
+                    adventure_off_cd_time = current_time;
                     create_monster(channel);
                     client.say(channel, userstate["display-name"] + " has started an adventure! " + game.monster.name + ", a level " + game.monster.level + " monster has been summoned!");
                     game.queuing = true;
@@ -345,13 +359,29 @@ client.on("chat", function(channel, userstate, message, self) {
             if (userstate["mod"] || userstate["display-name"] === owner_name)
             {
                 var mins = parseInt(message.substring(25, message.length));
-                if (mins >= 0 && mins <= 10)
+                if (mins >= 1 && mins <= 15)
                 {
                     adventure_cd = mins;
-                    client.say(channel, userstate["display-name"] + ", has set the adventure_cd to be " + mins + " minutes");
+                    client.say(channel, userstate["display-name"] + ", has set the adventure cooldown to be " + mins + " minutes");
                 }
                 else
-                    client.say(channel, userstate["display-name"] + ", unrecognized syntax. Valid format for this command is: !adventure_set_cd_minutes <minutes>");
+                    client.say(channel, userstate["display-name"] + ", unrecognized syntax. Valid format for this command is: !adventure_set_cd_minutes <minutes>, between 1 and 15 minutes");
+            }
+            else
+                client.say(channel, userstate["display-name"] + ", sorry you have to be a mod to use this command");
+        }
+        else if (message.substring(0, 34) == "!adventure_set_auto_launch_minutes")
+        {
+            if (userstate["mod"] || userstate["display-name"] === owner_name)
+            {
+                var mins = parseInt(message.substring(34, message.length));
+                if (mins >= adventure_cd && mins <= 60)
+                {
+                    auto_adventure_launch_cd = mins;
+                    client.say(channel, userstate["display-name"] + ", has set the auto launch time to be " + mins + " minutes");
+                }
+                else
+                    client.say(channel, userstate["display-name"] + ", unrecognized syntax. Valid format for this command is: !adventure_set_auto_launch_minutes <minutes>, between " + adventure_cd.toString() + " and 60 minutes");
             }
             else
                 client.say(channel, userstate["display-name"] + ", sorry you have to be a mod to use this command");
@@ -378,6 +408,8 @@ client.on("join", function(channel, username, self) {
         owner_name = channel.replace(/^#/, '');
         owner_name = owner_name[0].toUpperCase() +  owner_name.substr(1);
         client.say(channel, "This chat is running Adventure Bot. Use !adventure_help for a list of adventure commands");
+        
+        adventure_off_cd_time = new Date().getTime()
     }
 });
 
