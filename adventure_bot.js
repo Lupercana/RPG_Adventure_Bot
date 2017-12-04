@@ -102,21 +102,19 @@ function create_monster(channel)
 }
 
 function queue_message(channel, message_num)
-{
-    client.say(channel, "An adventure is starting in " + ((message_num + 1) * 30).toString() + " seconds! Join in with !adventure_join");
-    
+{    
     if (message_num <= 0)
+    {
         if (game.players.length > 0)
-            setTimeout(function() {run_game(channel);}, 5000); // 5 second delay
+            run_game(channel);
         else
         {
-            setTimeout(function() {
-                game.queuing = false;
-                client.say(channel, "Insufficient number of players, adventure ending");
-            }, 2000); // 2 second delay
+            game.queuing = false;
+            client.say(channel, "Insufficient number of players, adventure ending");
         }
+    }
     else
-        setTimeout(function() {queue_message(channel, message_num - 1);}, 30000); // 30 second delay
+        client.say(channel, "An adventure is starting in " + ((message_num) * 30).toString() + " seconds! Join in with !adventure_join");
 }
 
 // Queuing up a game, letting players join
@@ -124,7 +122,9 @@ function queue_game(channel)
 {
     var message_num = 2;
     
-    queue_message(channel, message_num);
+    setTimeout(function() {queue_message(channel, message_num);}, 5000); // 5 second delay
+    setTimeout(function() {queue_message(channel, message_num - 1);}, 35000); // 35 second delay
+    setTimeout(function() {queue_message(channel, message_num - 2);}, 65000); // 65 second delay
 }
 
 function battle(channel, days_past)
