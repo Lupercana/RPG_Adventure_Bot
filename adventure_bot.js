@@ -103,7 +103,7 @@ function create_monster(channel)
 
 function queue_message(channel, message_num)
 {
-    client.say(channel, "An adventure is starting in " + ((message_num + 1) * 5).toString() + " seconds! Join in with !adventure_join");
+    client.say(channel, "An adventure is starting in " + ((message_num + 1) * 30).toString() + " seconds! Join in with !adventure_join");
     
     if (message_num <= 0)
         if (game.players.length > 0)
@@ -116,7 +116,7 @@ function queue_message(channel, message_num)
             }, 2000); // 2 second delay
         }
     else
-        setTimeout(function() {queue_message(channel, message_num - 1);}, 5000); // 5 second delay
+        setTimeout(function() {queue_message(channel, message_num - 1);}, 30000); // 30 second delay
 }
 
 // Queuing up a game, letting players join
@@ -361,7 +361,7 @@ client.on("chat", function(channel, userstate, message, self) {
                 var mins = parseInt(message.substring(25, message.length));
                 if (mins >= 1 && mins <= 15)
                 {
-                    adventure_cd = mins;
+                    adventure_cd = mins + 1; // 1 minute for waiting for players to join
                     client.say(channel, userstate["display-name"] + ", has set the adventure cooldown to be " + mins + " minutes");
                 }
                 else
@@ -377,7 +377,7 @@ client.on("chat", function(channel, userstate, message, self) {
                 var mins = parseInt(message.substring(34, message.length));
                 if (mins >= adventure_cd && mins <= 60)
                 {
-                    auto_adventure_launch_cd = mins;
+                    auto_adventure_launch_cd = mins + 1; // 1 minute for waiting for players to join
                     client.say(channel, userstate["display-name"] + ", has set the auto launch time to be " + mins + " minutes");
                 }
                 else
