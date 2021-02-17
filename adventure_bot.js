@@ -9,10 +9,10 @@ var options = {
         reconnect: true
     },
     identity: {
-        username: "<bot name here>",
-        password:  "<bot authentication key here>"
+        username: "<role_playing_guy>",
+        password:  "<oauth:21ujf6ipwix60u9k3ouaqib4f0tdwh>"
     },
-    channels: ["<Insert streamer channel here>"]
+    channels: ["<https://www.twitch.tv/moonshot01>"]
 };
 
 var owner_name;
